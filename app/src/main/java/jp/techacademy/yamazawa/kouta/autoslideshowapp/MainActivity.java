@@ -112,4 +112,20 @@ public class MainActivity extends AppCompatActivity {
         }
         cursor.close();
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSIONS_REQUEST_CODE:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    getContentsInfo();
+                    Log.d("ANDROID", "許可された");
+                } else {
+                    Log.d("ANDROID", "許可されなかった");
+                }
+                break;
+            default:
+                break;
+        }
+    }
 }
