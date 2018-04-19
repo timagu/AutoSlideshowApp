@@ -31,7 +31,6 @@ public class MainActivity extends AppCompatActivity {
     Button Return_button;
     Button AutoPlay_button;
     Button MoveOn_button;
-    Button Permission_button;
     Timer mTimer;
     Cursor cursor;
 
@@ -53,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d("Version","6.0以降");
             if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                 //許可されている
-                // 画像の情報を取得する
+                // 現在の位置の画像を取得する
                 getContentsInfo();
             } else {
                 //拒否されている
@@ -61,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
                 requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSIONS_REQUEST_CODE);
             }
         }else{
-            // 画像の情報を取得する
+
             getContentsInfo();
             Log.d("Version","6.0以前");
         }
@@ -70,11 +69,53 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Log.d("ANDROID","進むボタンを押しました。");
-                getContentsInfo();
-                Log.d("ANDROID","画像を取得しました。");
-                //次の画像を表示
-                //cursor.moveToNext();
+                //次の画像を取得
+                if(cursor.moveToNext()){
+                    //画像表示
+                    int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+                    Long id = cursor.getLong(fieldIndex);
+                    Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                    ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
+                    imageVIew.setImageURI(imageUri);
+                }else{
+                    cursor.moveToFirst();
+                    Log.d("ANDROID","先頭の画像に戻りました。");
+                    //画像表示
+                    int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+                    Long id = cursor.getLong(fieldIndex);
+                    Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                    ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
+                    imageVIew.setImageURI(imageUri);
+                }
                 Log.d("ANDROID","次の画像です。");
+            }
+        });
+
+        Return_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d("ANDROID","戻るボタンを押しました。");
+                if(cursor.moveToPrevious()){
+                    //画像表示
+                    int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+                    Long id = cursor.getLong(fieldIndex);
+                    Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                    ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
+                    imageVIew.setImageURI(imageUri);
+                }else{
+                    cursor.moveToLast();
+                    Log.d("ANDROID","最後尾の画像に戻りました。");
+                    //画像表示
+                    int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+                    Long id = cursor.getLong(fieldIndex);
+                    Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                    ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
+                    imageVIew.setImageURI(imageUri);
+                }
             }
         });
 
@@ -84,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+        //cursor.close();
     };
 
     // 画像の情報を取得する
@@ -99,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
                 null // ソート (null ソートなし)
         );
 
-        if (cursor.moveToFirst()) { //検索結果が1つも無ければfalseを返すのでif文の{}には入らずすぐにcloseメソッドを呼び出します。
+        if (cursor.moveToFirst()) { //検索結果が1つも無ければfalseを返すのでif文の{}には入らずすぐに終わります。
 
             //1枚の画像表示
             int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
@@ -110,7 +152,6 @@ public class MainActivity extends AppCompatActivity {
             imageVIew.setImageURI(imageUri);
 
         }
-        cursor.close();
     }
 
     @Override
