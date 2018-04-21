@@ -2,6 +2,7 @@ package jp.techacademy.yamazawa.kouta.autoslideshowapp;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.pm.PackageManager;
@@ -34,9 +35,11 @@ public class MainActivity extends AppCompatActivity {
     Timer mTimer;
     Cursor cursor;
 
-    Handler mHandler = new Handler();
-
+    // タイマー用の時間のための変数
     double mTimerSec = 0.0;
+
+    //インスタンス
+    Handler mHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
                 // 現在の位置の画像を取得する
                 getContentsInfo();
             } else {
+
                 //拒否されている
                 Log.d("ANDROID", "許可されていない");
                 requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSIONS_REQUEST_CODE);
@@ -122,10 +126,55 @@ public class MainActivity extends AppCompatActivity {
         AutoPlay_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (mTimer == null){
+                    AutoPlay_button.setText("停止");
+                    Return_button.setEnabled(false);
+                    MoveOn_button.setEnabled(false);
+                    // タイマーの作成
+                    mTimer = new Timer();
+                    // タイマーの始動
+                    mTimer.schedule(new TimerTask() {
+                        @Override
+                        public void run(){
+                            mTimerSec += 0.1;
+
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    //次の画像を取得
+                                    if(cursor.moveToNext()){
+                                        //画像表示
+                                        int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+                                        Long id = cursor.getLong(fieldIndex);
+                                        Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                                        ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
+                                        imageVIew.setImageURI(imageUri);
+                                    }else{
+                                        cursor.moveToFirst();
+                                        Log.d("ANDROID","先頭の画像に戻りました。");
+                                        //画像表示
+                                        int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+                                        Long id = cursor.getLong(fieldIndex);
+                                        Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                                        ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
+                                        imageVIew.setImageURI(imageUri);
+                                    }
+                                }
+                            });
+                        }
+                    },2000,2000);
+                }else{
+                    mTimer.cancel();
+                    mTimer = null;
+                    AutoPlay_button.setText("再生");
+                    Return_button.setEnabled(true);
+                    MoveOn_button.setEnabled(true);
+                }
 
             }
         });
-        //cursor.close();
     };
 
     // 画像の情報を取得する
@@ -161,12 +210,28 @@ public class MainActivity extends AppCompatActivity {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     getContentsInfo();
                     Log.d("ANDROID", "許可された");
+                    AutoPlay_button.setEnabled(true);
+                    Return_button.setEnabled(true);
+                    MoveOn_button.setEnabled(true);
                 } else {
                     Log.d("ANDROID", "許可されなかった");
+                    AutoPlay_button.setEnabled(false);
+                    Return_button.setEnabled(false);
+                    MoveOn_button.setEnabled(false);
+                    showAlertDialog();
                 }
                 break;
             default:
                 break;
         }
+    }
+
+    public void  showAlertDialog(){
+        // AlertDialog.Builderクラスを使ってAlertDialogの準備をする
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setTitle("入力エラー");
+        alertDialogBuilder.setMessage("再起動して、画像の共有の承諾をお願いします。");
+        alertDialogBuilder.setPositiveButton("OK", null);
+        alertDialogBuilder.show();
     }
 }

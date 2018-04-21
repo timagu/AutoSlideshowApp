@@ -27,7 +27,7 @@
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/button3"
         android:layout_centerHorizontal="true"
-        android:text="再生/停止" />
+        android:text="再生" />
 
     <Button
         android:id="@+id/button3"
